@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,16 @@ import {
   Alert,
   Switch,
 } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useTheme } from '../../hooks/useTheme';
 import { useLogout } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/auth.store';
 import { Colors } from '../../constants/colors';
+
+const PIN_KEY = 'user_pin';
 
 interface SettingRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -21,13 +26,14 @@ interface SettingRowProps {
   onPress?: () => void;
   rightContent?: React.ReactNode;
   danger?: boolean;
+  isLast?: boolean;
 }
 
-function SettingRow({ icon, label, onPress, rightContent, danger = false }: SettingRowProps) {
+function SettingRow({ icon, label, onPress, rightContent, danger = false, isLast = false }: SettingRowProps) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
-      style={[styles.row, { borderBottomColor: colors.border }]}
+      style={[styles.row, !isLast && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress && !rightContent}
@@ -48,7 +54,69 @@ function SettingRow({ icon, label, onPress, rightContent, danger = false }: Sett
 export default function SettingsScreen() {
   const { colors, isDark, toggle } = useTheme();
   const user = useAuthStore((s) => s.user);
+  const biometricEnabled = useAuthStore((s) => s.biometricEnabled);
+  const setBiometricEnabled = useAuthStore((s) => s.setBiometricEnabled);
   const logout = useLogout();
+
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<'Face ID' | 'Touch ID' | 'Biometrics'>('Biometrics');
+  const [pinLabel, setPinLabel] = useState('Change PIN');
+
+  // Check hardware support and PIN existence on mount
+  useEffect(() => {
+    SecureStore.getItemAsync(PIN_KEY).then((saved) => {
+      setPinLabel(saved ? 'Change PIN' : 'Set PIN');
+    });
+    (async () => {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (hasHardware && isEnrolled) {
+        setBiometricAvailable(true);
+        const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+        if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+          setBiometricType('Face ID');
+        } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+          setBiometricType('Touch ID');
+        }
+      }
+    })();
+  }, []);
+
+  const handleBiometricToggle = async (value: boolean) => {
+    if (value) {
+      // Verify with biometrics before enabling
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: `Enable ${biometricType} for CryptoApp`,
+        cancelLabel: 'Cancel',
+        fallbackLabel: 'Use PIN',
+        disableDeviceFallback: false,
+      });
+
+      if (result.success) {
+        await setBiometricEnabled(true);
+        Alert.alert(
+          `${biometricType} Enabled`,
+          `You can now use ${biometricType} to unlock the app.`,
+        );
+      } else if (result.error !== 'user_cancel' && result.error !== 'system_cancel') {
+        Alert.alert('Authentication Failed', 'Could not verify your identity. Please try again.');
+      }
+    } else {
+      // Confirm before disabling
+      Alert.alert(
+        `Disable ${biometricType}`,
+        `Are you sure you want to disable ${biometricType} login?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Disable',
+            style: 'destructive',
+            onPress: () => setBiometricEnabled(false),
+          },
+        ],
+      );
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -64,7 +132,7 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Profile section */}
+        {/* Profile card */}
         <View style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: Colors.primary }]}>
             <Text style={styles.avatarText}>
@@ -83,12 +151,20 @@ export default function SettingsScreen() {
           <SettingRow
             icon={isDark ? 'moon' : 'sunny-outline'}
             label="Dark Mode"
-            rightContent={<Switch value={isDark} onValueChange={toggle} trackColor={{ true: Colors.primary }} />}
+            rightContent={
+              <Switch
+                value={isDark}
+                onValueChange={toggle}
+                trackColor={{ false: colors.border, true: Colors.primary }}
+                thumbColor="#FFFFFF"
+              />
+            }
           />
           <SettingRow
             icon="notifications-outline"
             label="Notifications"
             onPress={() => Alert.alert('Notifications', 'Coming soon!')}
+            isLast
           />
         </View>
 
@@ -97,34 +173,52 @@ export default function SettingsScreen() {
         <View style={[styles.section, { borderColor: colors.border }]}>
           <SettingRow
             icon="keypad-outline"
-            label="Change PIN"
-            onPress={() => Alert.alert('PIN', 'Coming soon!')}
+            label={pinLabel}
+            onPress={async () => {
+              await router.push('/(auth)/change-pin');
+              // Refresh label after returning from change-pin screen
+              const saved = await SecureStore.getItemAsync(PIN_KEY);
+              setPinLabel(saved ? 'Change PIN' : 'Set PIN');
+            }}
           />
-          <SettingRow
-            icon="finger-print-outline"
-            label="Biometric Login"
-            onPress={() => Alert.alert('Biometric', 'Coming soon!')}
-          />
-          <SettingRow
-            icon="shield-outline"
-            label="Two-Factor Auth"
-            onPress={() => Alert.alert('2FA', 'Coming soon!')}
-          />
+          {biometricAvailable && (
+            <SettingRow
+              icon={biometricType === 'Face ID' ? 'scan-outline' : 'finger-print-outline'}
+              label={biometricType}
+              rightContent={
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={handleBiometricToggle}
+                  trackColor={{ false: colors.border, true: Colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              }
+              isLast
+            />
+          )}
+          {!biometricAvailable && (
+            <SettingRow
+              icon="finger-print-outline"
+              label="Biometrics Unavailable"
+              rightContent={
+                <Text style={[styles.unavailableText, { color: colors.textSecondary }]}>
+                  Not set up
+                </Text>
+              }
+              isLast
+            />
+          )}
         </View>
 
         {/* Account */}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>ACCOUNT</Text>
         <View style={[styles.section, { borderColor: colors.border }]}>
           <SettingRow
-            icon="document-text-outline"
-            label="Terms of Service"
-            onPress={() => Alert.alert('Terms', 'Coming soon!')}
-          />
-          <SettingRow
             icon="log-out-outline"
             label="Sign Out"
             onPress={handleLogout}
             danger
+            isLast
           />
         </View>
 
@@ -175,7 +269,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: 1,
     gap: 12,
   },
   iconContainer: {
@@ -187,5 +280,6 @@ const styles = StyleSheet.create({
   },
   rowLabel: { flex: 1, fontSize: 15 },
   rowRight: { alignItems: 'center', justifyContent: 'center' },
+  unavailableText: { fontSize: 13 },
   bottomSpace: { height: 40 },
 });
