@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -17,7 +17,7 @@ const STAGE_CONFIG: Record<Stage, { title: string; subtitle: string }> = {
     subtitle: 'Enter your current 6-digit PIN',
   },
   new: {
-    title: 'New PIN',
+    title: 'Set PIN',
     subtitle: 'Enter a new 6-digit PIN',
   },
   confirm: {
@@ -29,9 +29,23 @@ const STAGE_CONFIG: Record<Stage, { title: string; subtitle: string }> = {
 export default function ChangePinScreen() {
   const { colors } = useTheme();
   const [stage, setStage] = useState<Stage>('current');
+  const [hasPinSet, setHasPinSet] = useState<boolean | null>(null); // null = loading
   const [pin, setPin] = useState<string[]>([]);
   const [newPin, setNewPin] = useState('');
   const [error, setError] = useState('');
+
+  // On mount: check whether the user already has a PIN stored
+  useEffect(() => {
+    SecureStore.getItemAsync(PIN_KEY).then((saved) => {
+      if (saved) {
+        setHasPinSet(true);
+        setStage('current'); // must verify current PIN first
+      } else {
+        setHasPinSet(false);
+        setStage('new'); // no PIN — skip straight to setting one
+      }
+    });
+  }, []);
 
   const handlePress = async (digit: string) => {
     if (pin.length >= PIN_LENGTH) return;
@@ -83,7 +97,15 @@ export default function ChangePinScreen() {
     setError('');
   };
 
+  // Still loading SecureStore
+  if (hasPinSet === null) return null;
+
   const config = STAGE_CONFIG[stage];
+
+  // When no existing PIN: only 2 steps (new → confirm). Otherwise 3 (current → new → confirm).
+  const visibleStages: Stage[] = hasPinSet
+    ? ['current', 'new', 'confirm']
+    : ['new', 'confirm'];
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -95,7 +117,7 @@ export default function ChangePinScreen() {
       <View style={styles.body}>
         {/* Stage indicator */}
         <View style={styles.stageRow}>
-          {(['current', 'new', 'confirm'] as Stage[]).map((s, i) => (
+          {visibleStages.map((s, i) => (
             <View
               key={s}
               style={[
@@ -104,7 +126,7 @@ export default function ChangePinScreen() {
                   backgroundColor:
                     s === stage
                       ? Colors.primary
-                      : (['current', 'new', 'confirm'] as Stage[]).indexOf(stage) > i
+                      : visibleStages.indexOf(stage) > i
                       ? Colors.success
                       : colors.border,
                 },

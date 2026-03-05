@@ -10,12 +10,15 @@ import {
   Switch,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../../hooks/useTheme';
 import { useLogout } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/auth.store';
 import { Colors } from '../../constants/colors';
+
+const PIN_KEY = 'user_pin';
 
 interface SettingRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -57,9 +60,13 @@ export default function SettingsScreen() {
 
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState<'Face ID' | 'Touch ID' | 'Biometrics'>('Biometrics');
+  const [pinLabel, setPinLabel] = useState('Change PIN');
 
-  // Check hardware support on mount
+  // Check hardware support and PIN existence on mount
   useEffect(() => {
+    SecureStore.getItemAsync(PIN_KEY).then((saved) => {
+      setPinLabel(saved ? 'Change PIN' : 'Set PIN');
+    });
     (async () => {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
@@ -166,8 +173,13 @@ export default function SettingsScreen() {
         <View style={[styles.section, { borderColor: colors.border }]}>
           <SettingRow
             icon="keypad-outline"
-            label="Change PIN"
-            onPress={() => router.push('/(auth)/change-pin')}
+            label={pinLabel}
+            onPress={async () => {
+              await router.push('/(auth)/change-pin');
+              // Refresh label after returning from change-pin screen
+              const saved = await SecureStore.getItemAsync(PIN_KEY);
+              setPinLabel(saved ? 'Change PIN' : 'Set PIN');
+            }}
           />
           {biometricAvailable && (
             <SettingRow
