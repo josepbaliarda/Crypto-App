@@ -251,7 +251,7 @@ Then press `i` for iOS Simulator or `a` for Android Emulator in the Expo DevTool
 
 ---
 
-## Design Tokens (CoinBase-inspired)
+## Design Tokens 
 
 ```
 Primary Blue:   #0052FF
