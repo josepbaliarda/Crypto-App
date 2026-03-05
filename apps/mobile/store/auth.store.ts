@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 
 const TOKEN_KEY = 'auth_token';
+const USER_KEY = 'auth_user';
 const BIOMETRIC_KEY = 'biometric_enabled';
 
 interface UserProfile {
@@ -32,23 +33,31 @@ export const useAuthStore = create<AuthStore>((set) => ({
   biometricEnabled: false,
 
   setAuth: async (token, user) => {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    await Promise.all([
+      SecureStore.setItemAsync(TOKEN_KEY, token),
+      SecureStore.setItemAsync(USER_KEY, JSON.stringify(user)),
+    ]);
     set({ token, user, isAuthenticated: true });
   },
 
   logout: async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await Promise.all([
+      SecureStore.deleteItemAsync(TOKEN_KEY),
+      SecureStore.deleteItemAsync(USER_KEY),
+    ]);
     set({ token: null, user: null, isAuthenticated: false });
   },
 
   loadToken: async () => {
     try {
-      const [token, biometric] = await Promise.all([
+      const [token, userJson, biometric] = await Promise.all([
         SecureStore.getItemAsync(TOKEN_KEY),
+        SecureStore.getItemAsync(USER_KEY),
         SecureStore.getItemAsync(BIOMETRIC_KEY),
       ]);
       set({
         token: token ?? null,
+        user: userJson ? (JSON.parse(userJson) as UserProfile) : null,
         isAuthenticated: !!token,
         biometricEnabled: biometric === 'true',
         isLoading: false,
